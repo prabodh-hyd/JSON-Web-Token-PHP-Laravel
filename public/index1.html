@@ -1,0 +1,164 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authorization using JWTs and PHP</title>
+</head>
+
+<body>
+  <main>
+    <form method="post" action="./authenticate.php" id="frmLogin">
+      <button type="submit">Create a JWT Token</button>
+    </form>
+
+    <button id="btnGetResource">Get Current Timestamp</button>
+    <span id="demo"></span>
+
+    <form method="post" action="updateToken.php"></form>
+    Name: <input type="text" id="name">
+    <!-- <button type="submit">submit the details</button><br> -->
+
+    <button type="submit" onclick="updateToken()">UPDATE</button><br><br>
+    <span id="demo1"></span></form>
+    <button id="newupdate">Updated the timeStamp</button>
+    <span id="demo2"></span>
+  </main>
+
+  <script>
+    const storeJWT = [];
+    const loginBtn = document.querySelector('#frmLogin');
+    const btnGetResource = document.querySelector('#btnGetResource');
+    const formData = document.forms[0];
+
+    // function updateToken() {
+    //   const updateName = document.getElementById("name").value;
+      // console.log(updateName);
+      // var array = [updateName, jwt];
+      // console.log(array);
+      // const givenName = updateName;
+      // console.log(givenName);
+      // const resCode = window.btoa(givenName );
+      //     console.log(resCode);
+      //     const resultCode = window.atob(resCode);
+      //     console.log(resultCode);
+
+    // }
+
+    // Inserts the jwt to the store object
+    storeJWT.setJWT = function (data) {
+      //console.log(data);
+      this.JWT = data;
+    };
+    loginBtn.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const response = await fetch('./authenticate.php', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }
+      });
+      if (response.status >= 200 && response.status <= 299) {
+        const jwt = await response.text();
+        storeJWT.setJWT(jwt);
+        frmLogin.style.display = 'none';
+        btnGetResource.style.display = 'block';
+      } else {
+        // Handle errors
+        console.log(response.status, response.statusText);
+      }
+
+    });
+    btnGetResource.addEventListener('click', async (e) => {
+      const res = await fetch('./resource.php', {
+        headers: {
+          'Authorization': `Bearer ${storeJWT.JWT}`
+        }
+      });
+      const timeStamp = await res.text();
+      let resTime = document.getElementById("demo").innerHTML = timeStamp;
+      console.log(timeStamp);
+    });
+
+    function updateToken() {
+      //display the input name on UI 
+      const updateName = document.getElementById("name").value;
+      let valuename = document.getElementById("demo1").innerHTML = updateName
+      // console.log(valuename);
+
+      //here encode the given input name
+      // var givenName = valuename;
+      //  var resCode = window.btoa(givenName );
+      //  console.log(resCode);
+
+      //here take the payload part by using split method in JWT Token
+      var ca = storeJWT.JWT;
+      var base64Url = ca.split('.')[1];
+      console.log(base64Url);
+
+      //here decode the JWT token (it is visible to json format on inspect)
+      var decodedValue = JSON.parse(window.atob(base64Url));
+      console.log(decodedValue);
+
+      //here this is converted JSON object to  string format(i mean vasantha related payload)
+      const myJSON = JSON.stringify(decodedValue);
+      // console.log(myJSON);
+
+
+      //here replace the vasantha to given any input name 
+      let result = myJSON.replace("vasantha", valuename);
+      console.log(result);
+
+
+      //here created json object with requied given name 
+      // var obj = JSON.parse(result);
+      // console.log(obj);
+
+      //here final json object(replaced name json object) is encoded 
+      var decodedValue1 = JSON.stringify(window.btoa(result));
+      // console.log(decodedValue1);
+
+      
+      //here i am trying to remove the double quotes from payload & it is  working
+      var removequotesPayload = decodedValue1.replace(/[" "| ==]+/g, '');
+      console.log(removequotesPayload);
+
+      
+      //here vasantha related payload is replaced with final encoded string by using replace method
+      let actualresult = ca.replace(base64Url, removequotesPayload);
+      // console.log(actualresult);
+
+      //here final JWT Token is visible on UI
+      var actualresulttoken = document.getElementById("demo1").innerHTML = actualresult
+      console.log(actualresulttoken);
+
+      
+      newupdate.addEventListener('click', async (e) => {
+      const res = await fetch('./resource.php', {
+        headers: {
+          // 'Authorization': `Bearer` .$actualresulttoken
+          'Authorization': `Bearer ${actualresulttoken}`
+        }
+
+      });
+      const timeStamp = await res.text();
+       document.getElementById("demo2").innerHTML = timeStamp;
+
+
+       //here i am doing  handle the errors
+    //    if (res.status >= 200 && res.status <= 299) {
+    //   const timeStamp = await res.text();
+    //   document.getElementById("demo2").innerHTML = timeStamp
+    // console.log("vasantha");
+    //   } else {
+    //     // Handle errors
+    //     console.log(res.status, res.statusText);
+    //   }
+    });
+
+    }
+
+  </script>
+</body>
+
+</html>
