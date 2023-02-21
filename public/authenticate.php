@@ -2,6 +2,7 @@
 declare(strict_types=1);
 use Firebase\JWT\JWT;
 require_once('../vendor/autoload.php');
+//firebase/php-jwt
 
 // Validate the credentials in the database, or in other data store.
 // For the purposes of this application, we'll consider that the credentials are valid.
